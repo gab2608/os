@@ -1,148 +1,58 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>MonOS Web - Style Mac</title>
-<link rel="stylesheet" href="css/style.css">
-<style>
-/* --- Desktop style --- */
-body, html {
-  margin:0; padding:0; width:100%; height:100%; font-family: 'Helvetica', sans-serif;
-  background: linear-gradient(to bottom, #4b6cb7, #182848);
-  overflow:hidden;
-}
-
-#desktop {
-  position:relative; width:100%; height:100%;
-}
-
-.icon {
-  width:80px; text-align:center; color:white; position:absolute; cursor:pointer;
-  user-select:none;
-}
-.icon img { width:64px; height:64px; }
-
-/* Dock style */
-#dock {
-  position:absolute; bottom:10px; left:50%; transform:translateX(-50%);
-  display:flex; gap:10px; background: rgba(0,0,0,0.3); padding:10px 20px; border-radius:20px;
-}
-
-/* Windows */
-.window {
-  position:absolute; width:400px; height:300px; background:#222; border-radius:8px;
-  border:2px solid #555; color:white; display:none; flex-direction:column; z-index:10;
-}
-.window-header {
-  background:#444; padding:5px; cursor:move; display:flex; justify-content:space-between; align-items:center;
-}
-.window-body { flex:1; padding:5px; overflow:auto; }
-
-.close-btn {
-  background:red; border:none; width:20px; height:20px; border-radius:3px; color:white; cursor:pointer;
-}
-
-#terminal { background:black; color:#0f0; height:100%; overflow:auto; padding:5px; }
-#terminal-input { width:100%; border:none; background:black; color:#0f0; outline:none; }
-
-iframe.browser { width:100%; height:100%; border:none; }
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>App Lunettes</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; background: #f0f0f0; }
+        h1 { text-align: center; }
+        textarea { width: 100%; height: 150px; margin-bottom: 10px; font-size: 1.2em; }
+        input, button { font-size: 1.1em; padding: 10px; margin: 5px 0; width: 100%; }
+        .status { margin-top: 10px; font-weight: bold; }
+    </style>
 </head>
 <body>
-<div id="desktop">
+    <h1>App Lunettes</h1>
+    <textarea id="textToSend" placeholder="Tape ton texte ici..."></textarea>
+    <input id="host" type="text" placeholder="IP de l'ordinateur / ESP32" value="192.168.1.10">
+    <input id="port" type="number" placeholder="Port TCP" value="12345">
+    <button onclick="sendText()">Envoyer au lunette OS</button>
+    <div class="status" id="status">Statut: Non connecté</div>
 
-  <!-- Desktop Icons -->
-  <div class="icon" style="top:20px; left:20px;" onclick="openWindow('win-terminal')">
-    <img src="https://img.icons8.com/ios-filled/50/ffffff/console.png"/>
-    <div>Terminal</div>
-  </div>
-  <div class="icon" style="top:20px; left:120px;" onclick="openWindow('win-browser')">
-    <img src="https://img.icons8.com/ios-filled/50/ffffff/internet.png"/>
-    <div>Browser</div>
-  </div>
-  <div class="icon" style="top:20px; left:220px;" onclick="openWindow('win-store')">
-    <img src="https://img.icons8.com/ios-filled/50/ffffff/shop.png"/>
-    <div>Store</div>
-  </div>
+    <script>
+        let socket;
 
-  <!-- Dock -->
-  <div id="dock">
-    <img src="https://img.icons8.com/ios-filled/50/ffffff/console.png" width="40" onclick="openWindow('win-terminal')"/>
-    <img src="https://img.icons8.com/ios-filled/50/ffffff/internet.png" width="40" onclick="openWindow('win-browser')"/>
-    <img src="https://img.icons8.com/ios-filled/50/ffffff/shop.png" width="40" onclick="openWindow('win-store')"/>
-  </div>
+        function sendText() {
+            const host = document.getElementById('host').value;
+            const port = document.getElementById('port').value;
+            const text = document.getElementById('textToSend').value;
 
-  <!-- Windows -->
-  <div id="win-terminal" class="window">
-    <div class="window-header"><span>Terminal</span><button class="close-btn" onclick="closeWindow('win-terminal')">X</button></div>
-    <div class="window-body">
-      <div id="terminal"></div>
-      <input type="text" id="terminal-input" placeholder="Tapez une commande...">
-    </div>
-  </div>
-
-  <div id="win-browser" class="window">
-    <div class="window-header"><span>Browser</span><button class="close-btn" onclick="closeWindow('win-browser')">X</button></div>
-    <div class="window-body">
-      <iframe class="browser" src="https://www.google.com"></iframe>
-    </div>
-  </div>
-
-  <div id="win-store" class="window">
-    <div class="window-header"><span>Store</span><button class="close-btn" onclick="closeWindow('win-store')">X</button></div>
-    <div class="window-body" id="store-body">
-      <h3>Applications disponibles :</h3>
-      <ul id="app-list"></ul>
-    </div>
-  </div>
-</div>
-
-<script>
-// --- Windows ---
-function openWindow(id){document.getElementById(id).style.display="flex";}
-function closeWindow(id){document.getElementById(id).style.display="none";}
-
-// Drag simple
-const windows = document.getElementsByClassName("window");
-Array.from(windows).forEach(win=>{
-  const header = win.querySelector(".window-header");
-  let offsetX, offsetY, dragging=false;
-  header.addEventListener("mousedown", e=>{dragging=true; offsetX=e.clientX-win.offsetLeft; offsetY=e.clientY-win.offsetTop;});
-  document.addEventListener("mouseup", e=>dragging=false);
-  document.addEventListener("mousemove", e=>{if(dragging){win.style.left=(e.clientX-offsetX)+"px"; win.style.top=(e.clientY-offsetY)+"px";}});
-});
-
-// --- Terminal ---
-const term=document.getElementById("terminal");
-const input=document.getElementById("terminal-input");
-const commands={help:"help, echo, clear",clear:()=>{term.innerHTML=""; return "";}};
-input.addEventListener("keydown", e=>{
-  if(e.key==="Enter"){
-    const cmd=input.value.trim(); let output="";
-    if(cmd==="") output="";
-    else if(commands[cmd]) output=typeof commands[cmd]==="function"?commands[cmd]():commands[cmd];
-    else if(cmd.startsWith("echo ")) output=cmd.substring(5);
-    else output="Commande inconnue : "+cmd;
-    term.innerHTML+="&gt; "+cmd+"<br>"+output+"<br>"; term.scrollTop=term.scrollHeight; input.value="";
-  }
-});
-
-// --- App Store ---
-const apps=[
-  {name:"Notes",desc:"Prenez des notes",action:()=>alert("Notes App ouverte!")},
-  {name:"Calc",desc:"Calculatrice",action:()=>alert("Calc App ouverte!")},
-  {name:"Weather",desc:"Météo",action:()=>alert("Weather App ouverte!")}
-];
-const appList=document.getElementById("app-list");
-apps.forEach(app=>{
-  const li=document.createElement("li");
-  li.textContent=app.name+" - "+app.desc;
-  li.style.cursor="pointer";
-  li.onclick=()=>app.action();
-  appList.appendChild(li);
-});
-</script>
+            if (!socket || socket.readyState === WebSocket.CLOSED) {
+                try {
+                    socket = new WebSocket(`ws://${host}:${port}`);
+                    socket.onopen = () => {
+                        document.getElementById('status').innerText = 'Statut: Connecté';
+                        socket.send(text);
+                    };
+                    socket.onmessage = (event) => {
+                        console.log("Réponse reçue:", event.data);
+                    };
+                    socket.onerror = (err) => {
+                        document.getElementById('status').innerText = 'Erreur de connexion';
+                        console.error(err);
+                    };
+                    socket.onclose = () => {
+                        document.getElementById('status').innerText = 'Statut: Déconnecté';
+                    };
+                } catch (e) {
+                    document.getElementById('status').innerText = 'Erreur création socket';
+                    console.error(e);
+                }
+            } else {
+                socket.send(text);
+            }
+        }
+    </script>
 </body>
 </html>
-
