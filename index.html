@@ -3,93 +3,114 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>MonOS Web</title>
+<title>MonOS Web - Style Mac</title>
+<link rel="stylesheet" href="css/style.css">
 <style>
+/* --- Desktop style --- */
 body, html {
-    margin:0; padding:0; width:100%; height:100%;
-    font-family: monospace;
-    background: #1e1e2f;
-    overflow:hidden;
-}
-#desktop { position:relative; width:100%; height:100%; }
-
-/* Barre des tâches */
-#taskbar {
-    position:absolute; bottom:0; left:0; width:100%; height:40px;
-    background: rgba(0,0,0,0.8);
-    color:white; display:flex; align-items:center; padding:0 5px;
-    box-sizing:border-box;
+  margin:0; padding:0; width:100%; height:100%; font-family: 'Helvetica', sans-serif;
+  background: linear-gradient(to bottom, #4b6cb7, #182848);
+  overflow:hidden;
 }
 
-/* Icônes du bureau */
-.icon { width:60px; text-align:center; color:white; position:absolute; cursor:pointer; user-select:none; }
-.icon img { width:48px; height:48px; }
+#desktop {
+  position:relative; width:100%; height:100%;
+}
 
-/* Fenêtres */
+.icon {
+  width:80px; text-align:center; color:white; position:absolute; cursor:pointer;
+  user-select:none;
+}
+.icon img { width:64px; height:64px; }
+
+/* Dock style */
+#dock {
+  position:absolute; bottom:10px; left:50%; transform:translateX(-50%);
+  display:flex; gap:10px; background: rgba(0,0,0,0.3); padding:10px 20px; border-radius:20px;
+}
+
+/* Windows */
 .window {
-    position:absolute; width:300px; height:200px; background:#222;
-    border:2px solid #555; border-radius:5px; color:white;
-    display:none; flex-direction:column; z-index:10;
+  position:absolute; width:400px; height:300px; background:#222; border-radius:8px;
+  border:2px solid #555; color:white; display:none; flex-direction:column; z-index:10;
 }
 .window-header {
-    background:#444; padding:5px; cursor:move; display:flex; justify-content:space-between; align-items:center;
+  background:#444; padding:5px; cursor:move; display:flex; justify-content:space-between; align-items:center;
 }
 .window-body { flex:1; padding:5px; overflow:auto; }
 
-/* Bouton fermeture */
-.close-btn { background:red; border:none; width:20px; height:20px; border-radius:3px; color:white; cursor:pointer; }
+.close-btn {
+  background:red; border:none; width:20px; height:20px; border-radius:3px; color:white; cursor:pointer;
+}
 
-/* Terminal */
-#terminal { background:black; color:#0f0; height:100%; overflow-y:auto; padding:5px; box-sizing:border-box; }
+#terminal { background:black; color:#0f0; height:100%; overflow:auto; padding:5px; }
 #terminal-input { width:100%; border:none; background:black; color:#0f0; outline:none; }
+
+iframe.browser { width:100%; height:100%; border:none; }
 </style>
 </head>
 <body>
 <div id="desktop">
-    <!-- Icônes -->
-    <div class="icon" style="top:10px; left:10px;" onclick="openWindow('win-terminal')">
-        <img src="https://img.icons8.com/ios-filled/50/ffffff/console.png"/>
-        <div>Terminal</div>
-    </div>
-    <div class="icon" style="top:80px; left:10px;" onclick="openWindow('win-store')">
-        <img src="https://img.icons8.com/ios-filled/50/ffffff/shop.png"/>
-        <div>Store</div>
-    </div>
 
-    <!-- Fenêtres -->
-    <div id="win-terminal" class="window">
-        <div class="window-header"><span>Terminal</span><button class="close-btn" onclick="closeWindow('win-terminal')">X</button></div>
-        <div class="window-body">
-            <div id="terminal"></div>
-            <input type="text" id="terminal-input" placeholder="Tapez une commande...">
-        </div>
-    </div>
+  <!-- Desktop Icons -->
+  <div class="icon" style="top:20px; left:20px;" onclick="openWindow('win-terminal')">
+    <img src="https://img.icons8.com/ios-filled/50/ffffff/console.png"/>
+    <div>Terminal</div>
+  </div>
+  <div class="icon" style="top:20px; left:120px;" onclick="openWindow('win-browser')">
+    <img src="https://img.icons8.com/ios-filled/50/ffffff/internet.png"/>
+    <div>Browser</div>
+  </div>
+  <div class="icon" style="top:20px; left:220px;" onclick="openWindow('win-store')">
+    <img src="https://img.icons8.com/ios-filled/50/ffffff/shop.png"/>
+    <div>Store</div>
+  </div>
 
-    <div id="win-store" class="window">
-        <div class="window-header"><span>Store</span><button class="close-btn" onclick="closeWindow('win-store')">X</button></div>
-        <div class="window-body" id="store-body">
-            <h3>Applications disponibles :</h3>
-            <ul id="app-list"></ul>
-        </div>
-    </div>
+  <!-- Dock -->
+  <div id="dock">
+    <img src="https://img.icons8.com/ios-filled/50/ffffff/console.png" width="40" onclick="openWindow('win-terminal')"/>
+    <img src="https://img.icons8.com/ios-filled/50/ffffff/internet.png" width="40" onclick="openWindow('win-browser')"/>
+    <img src="https://img.icons8.com/ios-filled/50/ffffff/shop.png" width="40" onclick="openWindow('win-store')"/>
+  </div>
 
-    <!-- Barre des tâches -->
-    <div id="taskbar">MonOS Web</div>
+  <!-- Windows -->
+  <div id="win-terminal" class="window">
+    <div class="window-header"><span>Terminal</span><button class="close-btn" onclick="closeWindow('win-terminal')">X</button></div>
+    <div class="window-body">
+      <div id="terminal"></div>
+      <input type="text" id="terminal-input" placeholder="Tapez une commande...">
+    </div>
+  </div>
+
+  <div id="win-browser" class="window">
+    <div class="window-header"><span>Browser</span><button class="close-btn" onclick="closeWindow('win-browser')">X</button></div>
+    <div class="window-body">
+      <iframe class="browser" src="https://www.google.com"></iframe>
+    </div>
+  </div>
+
+  <div id="win-store" class="window">
+    <div class="window-header"><span>Store</span><button class="close-btn" onclick="closeWindow('win-store')">X</button></div>
+    <div class="window-body" id="store-body">
+      <h3>Applications disponibles :</h3>
+      <ul id="app-list"></ul>
+    </div>
+  </div>
 </div>
 
 <script>
-// --- Gestion fenêtres ---
+// --- Windows ---
 function openWindow(id){document.getElementById(id).style.display="flex";}
 function closeWindow(id){document.getElementById(id).style.display="none";}
 
 // Drag simple
 const windows = document.getElementsByClassName("window");
 Array.from(windows).forEach(win=>{
-    const header = win.querySelector(".window-header");
-    let offsetX, offsetY, dragging=false;
-    header.addEventListener("mousedown", e=>{dragging=true; offsetX=e.clientX-win.offsetLeft; offsetY=e.clientY-win.offsetTop;});
-    document.addEventListener("mouseup", e=>dragging=false);
-    document.addEventListener("mousemove", e=>{if(dragging){win.style.left=(e.clientX-offsetX)+"px"; win.style.top=(e.clientY-offsetY)+"px";}});
+  const header = win.querySelector(".window-header");
+  let offsetX, offsetY, dragging=false;
+  header.addEventListener("mousedown", e=>{dragging=true; offsetX=e.clientX-win.offsetLeft; offsetY=e.clientY-win.offsetTop;});
+  document.addEventListener("mouseup", e=>dragging=false);
+  document.addEventListener("mousemove", e=>{if(dragging){win.style.left=(e.clientX-offsetX)+"px"; win.style.top=(e.clientY-offsetY)+"px";}});
 });
 
 // --- Terminal ---
@@ -97,26 +118,31 @@ const term=document.getElementById("terminal");
 const input=document.getElementById("terminal-input");
 const commands={help:"help, echo, clear",clear:()=>{term.innerHTML=""; return "";}};
 input.addEventListener("keydown", e=>{
-    if(e.key==="Enter"){
-        const cmd=input.value.trim(); let output="";
-        if(cmd==="") output="";
-        else if(commands[cmd]) output=typeof commands[cmd]==="function"?commands[cmd]():commands[cmd];
-        else if(cmd.startsWith("echo ")) output=cmd.substring(5);
-        else output="Commande inconnue : "+cmd;
-        term.innerHTML+="&gt; "+cmd+"<br>"+output+"<br>"; term.scrollTop=term.scrollHeight; input.value="";
-    }
+  if(e.key==="Enter"){
+    const cmd=input.value.trim(); let output="";
+    if(cmd==="") output="";
+    else if(commands[cmd]) output=typeof commands[cmd]==="function"?commands[cmd]():commands[cmd];
+    else if(cmd.startsWith("echo ")) output=cmd.substring(5);
+    else output="Commande inconnue : "+cmd;
+    term.innerHTML+="&gt; "+cmd+"<br>"+output+"<br>"; term.scrollTop=term.scrollHeight; input.value="";
+  }
 });
 
 // --- App Store ---
-const apps=[{name:"Notes",desc:"Prenez des notes rapidement",action:()=>alert("Notes App ouverte!")},{name:"Calc",desc:"Calculatrice basique",action:()=>alert("Calculatrice ouverte!")}];
+const apps=[
+  {name:"Notes",desc:"Prenez des notes",action:()=>alert("Notes App ouverte!")},
+  {name:"Calc",desc:"Calculatrice",action:()=>alert("Calc App ouverte!")},
+  {name:"Weather",desc:"Météo",action:()=>alert("Weather App ouverte!")}
+];
 const appList=document.getElementById("app-list");
 apps.forEach(app=>{
-    const li=document.createElement("li");
-    li.textContent=app.name+" - "+app.desc;
-    li.style.cursor="pointer";
-    li.onclick=()=>app.action();
-    appList.appendChild(li);
+  const li=document.createElement("li");
+  li.textContent=app.name+" - "+app.desc;
+  li.style.cursor="pointer";
+  li.onclick=()=>app.action();
+  appList.appendChild(li);
 });
 </script>
 </body>
 </html>
+
