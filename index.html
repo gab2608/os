@@ -1,26 +1,43 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Envoyer texte aux lunettes</title>
+  <meta charset="UTF-8">
+  <title>Envoyer texte au Nano</title>
 </head>
 <body>
 <h2>Envoyer du texte au Nano V3</h2>
-<form id="textForm">
-  <input type="text" id="textInput" placeholder="Écris ici" />
-  <button type="submit">Envoyer</button>
-</form>
+<input type="text" id="textInput" placeholder="Écris ici" />
+<button id="connectBtn">Connecter BLE</button>
+<button id="sendBtn">Envoyer</button>
 
 <script>
-document.getElementById("textForm").addEventListener("submit", function(e){
-  e.preventDefault();
-  let text = document.getElementById("textInput").value;
-  fetch("https://mon-nano-server.up.railway.app/send", {
-    method: "POST",
-    headers: {"Content-Type": "application/x-www-form-urlencoded"},
-    body: "text=" + encodeURIComponent(text)
-  });
-  document.getElementById("textInput").value = "";
-});
+let device, characteristic;
+
+document.getElementById("connectBtn").onclick = async () => {
+    try {
+        device = await navigator.bluetooth.requestDevice({
+            filters: [{ name: "NanoTexte" }],
+            optionalServices: ['0000ffe0-0000-1000-8000-00805f9b34fb'] // Service texte
+        });
+        const server = await device.gatt.connect();
+        const service = await server.getPrimaryService('0000ffe0-0000-1000-8000-00805f9b34fb');
+        characteristic = await service.getCharacteristic('0000ffe1-0000-1000-8000-00805f9b34fb'); // Caractéristique texte
+        alert("Connecté au Nano !");
+    } catch(err) {
+        alert("Erreur de connexion BLE: " + err);
+    }
+};
+
+document.getElementById("sendBtn").onclick = async () => {
+    if(!characteristic) {
+        alert("Connecte d'abord au Nano !");
+        return;
+    }
+    let text = document.getElementById("textInput").value;
+    let encoder = new TextEncoder();
+    await characteristic.writeValue(encoder.encode(text));
+    document.getElementById("textInput").value = "";
+};
 </script>
 </body>
 </html>
