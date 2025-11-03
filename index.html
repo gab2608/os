@@ -1,86 +1,26 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html>
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>App Lunettes — Envoi Texte</title>
-<style>
-  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial; padding:18px; background:#f7f9fc; color:#222; }
-  h1 { text-align:center; }
-  .card { max-width:720px; margin:12px auto; padding:14px; background:white; border-radius:10px; box-shadow:0 6px 18px rgba(20,20,30,0.08); }
-  textarea { width:100%; height:140px; font-size:16px; padding:8px; box-sizing:border-box; border-radius:6px; border:1px solid #ddd; }
-  input { width:100%; padding:10px; box-sizing:border-box; margin-top:8px; border-radius:6px; border:1px solid #ddd; }
-  button { width:100%; margin-top:10px; padding:12px; border-radius:8px; border:0; background:#0066ff; color:white; font-weight:600; font-size:16px; }
-  .row { display:flex; gap:8px; }
-  .small { font-size:13px; color:#666; margin-top:8px; }
-  .status { margin-top:10px; font-weight:600; }
-</style>
+  <title>Envoyer texte aux lunettes</title>
 </head>
 <body>
-  <div class="card">
-    <h1>App Lunettes</h1>
-
-    <label>Message à envoyer :</label>
-    <textarea id="textToSend" placeholder="Tape ton texte ici..."></textarea>
-
-    <label>Adresse WebSocket (wss) — ex: wss://abcd.ngrok.io</label>
-    <input id="wsAddr" type="text" placeholder="wss://..." value="">
-
-    <div class="row">
-      <button id="connectBtn" onclick="connectWS()">Connecter</button>
-    </div>
-
-    <button onclick="sendText()">Envoyer le texte</button>
-
-    <div class="status" id="status">Statut: déconnecté</div>
-    <div class="small">Remarque: cette page doit être servie via HTTPS (GitHub Pages). Pour que la page connecte au serveur WebSocket il faut une URL <strong>wss://</strong> (ngrok ou serveur TLS).</div>
-  </div>
+<h2>Envoyer du texte au Nano V3</h2>
+<form id="textForm">
+  <input type="text" id="textInput" placeholder="Écris ici" />
+  <button type="submit">Envoyer</button>
+</form>
 
 <script>
-let socket = null;
-
-function setStatus(t) {
-  document.getElementById('status').innerText = 'Statut: ' + t;
-}
-
-function connectWS(){
-  const addr = document.getElementById('wsAddr').value.trim();
-  if(!addr){
-    alert('Renseigne l\'adresse wss (ex: wss://abcd.ngrok.io)');
-    return;
-  }
-  if(socket && socket.readyState === WebSocket.OPEN){
-    setStatus('déjà connecté');
-    return;
-  }
-  setStatus('connexion en cours...');
-  try {
-    socket = new WebSocket(addr);
-    socket.onopen = () => {
-      setStatus('connecté');
-      console.log('WS open');
-    };
-    socket.onmessage = (ev) => {
-      console.log('Message from server:', ev.data);
-      // tu peux afficher une confirmation ici si besoin
-    };
-    socket.onclose = () => setStatus('déconnecté');
-    socket.onerror = (e) => { console.error('WS error', e); setStatus('erreur'); };
-  } catch (e) {
-    console.error(e);
-    setStatus('erreur création socket');
-  }
-}
-
-function sendText(){
-  const txt = document.getElementById('textToSend').value;
-  if(!socket || socket.readyState !== WebSocket.OPEN){
-    alert('Connecte-toi d\'abord (bouton Connecter).');
-    return;
-  }
-  socket.send(txt);
-  setStatus('message envoyé');
-}
+document.getElementById("textForm").addEventListener("submit", function(e){
+  e.preventDefault();
+  let text = document.getElementById("textInput").value;
+  fetch("https://mon-nano-server.up.railway.app/send", {
+    method: "POST",
+    headers: {"Content-Type": "application/x-www-form-urlencoded"},
+    body: "text=" + encodeURIComponent(text)
+  });
+  document.getElementById("textInput").value = "";
+});
 </script>
 </body>
 </html>
