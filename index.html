@@ -1,24 +1,80 @@
 <!DOCTYPE html>
-<html>
+<html lang="fr">
 <head>
-    <title>Envoyer du texte au PC</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>App Bluetooth</title>
+<style>
+body { font-family: Arial, sans-serif; background: #f0f0f0; text-align:center; }
+h1 { color: #333; }
+textarea { width: 80%; height: 100px; margin: 10px 0; }
+button { padding: 10px 20px; margin: 5px; font-size: 16px; }
+img { max-width: 80%; margin: 10px 0; }
+</style>
 </head>
 <body>
-    <h1>Envoyer du texte au PC</h1>
-    <textarea id="message" placeholder="Tape ton texte ici..." rows="4" cols="50"></textarea><br>
-    <button onclick="sendText()">Envoyer</button>
+<h1>Envoyer via Bluetooth</h1>
 
-    <script>
-        async function sendText() {
-            const text = document.getElementById("message").value;
-            const response = await fetch("http://100.115.92.206:5000/send", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ text: text })
-            });
-            const data = await response.json();
-            alert("Message envoyé !");
+<textarea id="textInput" placeholder="Écris ton texte ici..."></textarea><br>
+<input type="file" id="imgInput" accept="image/*"><br>
+
+<button onclick="connectBluetooth()">Connecter Bluetooth</button>
+<button onclick="sendText()">Envoyer texte</button>
+<button onclick="sendImage()">Envoyer image</button>
+
+<script>
+let device;
+let server;
+let service;
+let characteristic;
+
+// UUIDs personnalisés
+const SERVICE_UUID = '12345678-1234-5678-1234-56789abcdef0';
+const CHAR_UUID = 'abcdef01-1234-5678-1234-56789abcdef0';
+
+async function connectBluetooth() {
+    try {
+        device = await navigator.bluetooth.requestDevice({
+            acceptAllDevices: true,
+            optionalServices: [SERVICE_UUID]
+        });
+        server = await device.gatt.connect();
+        service = await server.getPrimaryService(SERVICE_UUID);
+        characteristic = await service.getCharacteristic(CHAR_UUID);
+        alert('Connecté au périphérique Bluetooth !');
+    } catch (err) {
+        alert('Erreur de connexion: ' + err);
+    }
+}
+
+async function sendText() {
+    if (!characteristic) { alert('Connecte-toi d’abord !'); return; }
+    let text = document.getElementById('textInput').value;
+    let encoder = new TextEncoder();
+    let data = encoder.encode(text);
+    await characteristic.writeValue(data);
+    alert('Texte envoyé !');
+}
+
+async function sendImage() {
+    if (!characteristic) { alert('Connecte-toi d’abord !'); return; }
+    const fileInput = document.getElementById('imgInput');
+    if (fileInput.files.length === 0) { alert('Sélectionne une image !'); return; }
+
+    const file = fileInput.files[0];
+    const reader = new FileReader();
+    reader.onload = async function(e) {
+        const arrayBuffer = e.target.result;
+        // Découper en blocs de 512 octets si nécessaire
+        const chunkSize = 512;
+        for (let i = 0; i < arrayBuffer.byteLength; i += chunkSize) {
+            const chunk = arrayBuffer.slice(i, i + chunkSize);
+            await characteristic.writeValue(chunk);
         }
-    </script>
+        alert('Image envoyée !');
+    };
+    reader.readAsArrayBuffer(file);
+}
+</script>
 </body>
 </html>
