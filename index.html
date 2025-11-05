@@ -1,43 +1,40 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <meta charset="UTF-8">
-  <title>Envoyer texte au Nano</title>
+  <meta charset="utf-8">
+  <title>Envoyer texte BLE</title>
 </head>
-<body>
-<h2>Envoyer du texte au Nano V3</h2>
-<input type="text" id="textInput" placeholder="Écris ici" />
-<button id="connectBtn">Connecter BLE</button>
-<button id="sendBtn">Envoyer</button>
+<body style="text-align:center; margin-top:40px;">
+  <h2>Envoyer du texte via BLE</h2>
+  <button id="connect">Se connecter au PC</button><br><br>
+  <input id="msg" type="text" placeholder="Message...">
+  <button id="send">Envoyer</button>
 
-<script>
-let device, characteristic;
+  <script>
+    let characteristic;
 
-document.getElementById("connectBtn").onclick = async () => {
-    try {
-        device = await navigator.bluetooth.requestDevice({
-            filters: [{ name: "NanoTexte" }],
-            optionalServices: ['0000ffe0-0000-1000-8000-00805f9b34fb'] // Service texte
+    document.getElementById("connect").onclick = async () => {
+      try {
+        const device = await navigator.bluetooth.requestDevice({
+          filters: [{ namePrefix: "BLE" }],
+          optionalServices: ["12345678-1234-5678-1234-56789abcdef0"]
         });
         const server = await device.gatt.connect();
-        const service = await server.getPrimaryService('0000ffe0-0000-1000-8000-00805f9b34fb');
-        characteristic = await service.getCharacteristic('0000ffe1-0000-1000-8000-00805f9b34fb'); // Caractéristique texte
-        alert("Connecté au Nano !");
-    } catch(err) {
-        alert("Erreur de connexion BLE: " + err);
-    }
-};
+        const service = await server.getPrimaryService("12345678-1234-5678-1234-56789abcdef0");
+        characteristic = await service.getCharacteristic("abcdef01-1234-5678-1234-56789abcdef0");
+        alert("Connecté !");
+      } catch (err) {
+        alert("Erreur : " + err);
+      }
+    };
 
-document.getElementById("sendBtn").onclick = async () => {
-    if(!characteristic) {
-        alert("Connecte d'abord au Nano !");
-        return;
-    }
-    let text = document.getElementById("textInput").value;
-    let encoder = new TextEncoder();
-    await characteristic.writeValue(encoder.encode(text));
-    document.getElementById("textInput").value = "";
-};
-</script>
+    document.getElementById("send").onclick = async () => {
+      if (!characteristic) return alert("Pas connecté !");
+      const text = document.getElementById("msg").value;
+      const encoder = new TextEncoder();
+      await characteristic.writeValue(encoder.encode(text));
+      alert("Envoyé : " + text);
+    };
+  </script>
 </body>
 </html>
