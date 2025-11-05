@@ -11,7 +11,7 @@
     <script>
         async function sendText() {
             const text = document.getElementById("message").value;
-            const response = await fetch("http://[IP_DE_TON_PC]:5000/send", {
+            const response = await fetch("http://100.115.92.206:5000/send", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ text: text })
